@@ -121,7 +121,7 @@ def main():
     # Loading normal distributed data
     normal_distributed_data = pd.read_csv("datasets/height_weight.csv")
     # Loading non-normal distributed data
-    medical_data = pd.read_csv("heart_disease.csv")
+    medical_data = pd.read_csv("datasets/heart_disease.csv")
 
     # Calculate and save descriptive statistics
     descriptive_statistics(normal_distributed_data, output_file="descriptive_stats/descriptive_statistics_height_weight.csv")
