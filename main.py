@@ -119,13 +119,13 @@ def mann_whitney_u_test(data):
 
 def main():
     # Loading normal distributed data
-    normal_distributed_data = pd.read_csv("height_weight.csv")
+    normal_distributed_data = pd.read_csv("datasets/height_weight.csv")
     # Loading non-normal distributed data
     medical_data = pd.read_csv("heart_disease.csv")
 
     # Calculate and save descriptive statistics
-    descriptive_statistics(normal_distributed_data, output_file="descriptive_statistics_height_weight.csv")
-    descriptive_statistics(medical_data, output_file="descriptive_statistics_medical.csv")
+    descriptive_statistics(normal_distributed_data, output_file="descriptive_stats/descriptive_statistics_height_weight.csv")
+    descriptive_statistics(medical_data, output_file="descriptive_stats/descriptive_statistics_medical.csv")
 
     print("Performing the normal distribution check:")
     # Checking normal distribution of data for tests with normal distribution
