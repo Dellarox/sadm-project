@@ -1,6 +1,40 @@
 import pandas as pd
-import scipy.stats as stats
-from scipy.stats import f_oneway, chi2_contingency, kruskal, pearsonr
+from scipy.stats import shapiro, ttest_ind, ttest_rel, mannwhitneyu, kruskal
+import matplotlib.pyplot as plt
+
+
+def check_normal_distribution(data):
+    height_data = data["Height"]
+    weight_data = data["Weight"]
+
+    # Visual Inspection
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(2, 2, 1)
+    plt.hist(height_data, bins=20, color='skyblue', edgecolor='black')
+    plt.title('Histogram')
+
+    plt.subplot(2, 2, 2)
+    plt.hist(weight_data, bins=20, color='skyblue', edgecolor='black')
+    plt.title('Histogram')
+
+    plt.subplot(2, 2, 3)
+    plt.boxplot(height_data, vert=False)
+    plt.title('Boxplot')
+
+    plt.subplot(2, 2, 4)
+    plt.boxplot(weight_data, vert=False)
+    plt.title('Boxplot')
+
+    # Shapiro-Wilk Test for Normality
+    height_statistics, height_p_value = shapiro(height_data)
+    weight_statistics, weight_p_value = shapiro(weight_data)
+
+    print(f'Shapiro-Wilk p-value for height: {height_p_value:.4f}')
+    print(f'Shapiro-Wilk p-value for weight: {weight_p_value:.4f}')
+
+    plt.tight_layout()
+    plt.show()
 
 
 # This function calculates basic descriptive statistics for the given data and saves the results to a file.
@@ -18,52 +52,28 @@ def descriptive_statistics(data, output_file="descriptive_statistics.csv"):
     descriptive_stats.to_csv(output_file)
 
     # Display rounded and transposed descriptive statistics
-    print("Descriptive Statistics:")
+    print(f"Descriptive Statistics:")
     print(descriptive_stats)
 
 
-def tstudent_test(data):
-    # The t-test will be performed between the Age and Chol columns
-    # The null hypothesis is that there is no significant difference between the means of age and cholesterol levels.
-    age = data["Age"]
-    cholesterol = data["Chol"]
+def student_ttest(data):
+    height = data["Height"]
+    weight = data["Weight"]
 
-    t_stat, p_value = stats.ttest_ind(age, cholesterol)
+    t_stat, p_value = ttest_ind(height, weight)
     print("t-statistic: ", t_stat)
     print("p-value: ", p_value)
 
     alpha = 0.05
     if p_value < alpha:
-        print('Reject the null hypothesis. There is a significant difference between age and cholesterol levels.')
+        print('Reject the null hypothesis. There is a significant difference between height and weight levels.')
     else:
         print(
-            'Fail to reject the null hypothesis. There is no significant difference between age and cholesterol levels.')
+            'Fail to reject the null hypothesis. There is no significant difference between height and weight levels.')
 
 
-def anove_test(data):
-    # Extract 'Age' and 'ExAng' columns
-    age = data['Age']
-    ex_angina = data['ExAng']
-
-    # Perform one-way ANOVA
-    f_stat, p_value = f_oneway(age, ex_angina)
-
-    # Print the results
-    print(f'F-statistic: {f_stat}')
-    print(f'P-value: {p_value}')
-
-    # Interpret the results
-    alpha = 0.05
-    if p_value < alpha:
-        print('Reject the null hypothesis. There is a significant difference between age and Ex Induced Angina.')
-    else:
-        print(
-            'Fail to reject the null hypothesis. There is no significant difference between age and Ex Induced Angina.')
-
-
-def pearson_correlation(data):
-    # Perform Pearson correlation test
-    corr_coefficient, p_value = pearsonr(data['Age'], data['ExAng'])
+def paired_ttest(data):
+    corr_coefficient, p_value = ttest_rel(data['Weight'], data['Height'])
 
     # Print the results
     print(f'Pearson correlation coefficient: {corr_coefficient}')
@@ -72,36 +82,31 @@ def pearson_correlation(data):
     # Interpret the results
     alpha = 0.05
     if p_value < alpha:
-        print('Reject the null hypothesis. There is a significant correlation between Age and ExAng.')
+        print('Reject the null hypothesis. There is a significant correlation between Height and Weight.')
     else:
-        print('Fail to reject the null hypothesis. There is no significant correlation between Age and ExAng.')
+        print('Fail to reject the null hypothesis. There is no significant correlation between Height and Weight.')
 
 
-def chi_square_test(data):
-    # Create a contingency table
-    contingency_table = pd.crosstab(data['Age'], data['Sex'])
-
-    # Perform chi-square test
-    chi2_stat, p_value, _, _ = chi2_contingency(contingency_table)
+def kruskal_test(data):
+    kruskal_stat, p_value = kruskal(data['Age'], data['Chol'], data['ThalAch'])
 
     # Print the results
-    print(f'Chi-square statistic: {chi2_stat}')
+    print(f'Kruskal statistics: {kruskal_stat}')
     print(f'P-value: {p_value}')
 
     # Interpret the results
     alpha = 0.05
     if p_value < alpha:
-        print('Reject the null hypothesis. There is a significant association between Age and Sex.')
+        print('Reject the null hypothesis. There is a significant correlation between Height and Weight.')
     else:
-        print('Fail to reject the null hypothesis. There is no significant association between Age and Sex.')
+        print('Fail to reject the null hypothesis. There is no significant correlation between Height and Weight.')
 
 
-def kruskal_wallis_test(data):
-    # Perform Kruskal-Wallis test
-    kruskal_stat, p_value = kruskal(data['ThalAch'], data['Sex'])
+def mann_whitney_u_test(data):
+    mann_whitney_u_stat, p_value = mannwhitneyu(data['ThalAch'], data['Sex'])
 
     # Print the results
-    print(f'Kruskal-Wallis statistic: {kruskal_stat}')
+    print(f'Mann Whitney U statistic: {mann_whitney_u_stat}')
     print(f'P-value: {p_value}')
 
     # Interpret the results
@@ -113,26 +118,38 @@ def kruskal_wallis_test(data):
 
 
 def main():
-    # Load data
-    data = pd.read_csv("heart_disease.csv")
+    # Loading normal distributed data
+    normal_distributed_data = pd.read_csv("height_weight.csv")
+    # Loading non-normal distributed data
+    medical_data = pd.read_csv("heart_disease.csv")
 
     # Calculate and save descriptive statistics
-    descriptive_statistics(data)
+    descriptive_statistics(normal_distributed_data, output_file="descriptive_statistics_height_weight.csv")
+    descriptive_statistics(medical_data, output_file="descriptive_statistics_medical.csv")
 
-    # In our case, the normal distribution is not necessary, because of a lot of samples.
-    tstudent_test(data)
+    print("Performing the normal distribution check:")
+    # Checking normal distribution of data for tests with normal distribution
+    check_normal_distribution(normal_distributed_data)
+    print("")
 
-    # Perform one-way ANOVA
-    anove_test(data)
+    print("Performing the student t-test:")
+    # Perform Student t-test - parametric
+    student_ttest(normal_distributed_data)
+    print("")
 
-    # Perform Pearson correlation test
-    pearson_correlation(data)
+    print("Performing the pair t-test:")
+    # Perform paired t-test correlation test - parametric
+    paired_ttest(normal_distributed_data)
+    print("")
 
-    # Perform chi-square test
-    chi_square_test(data)
+    print("Performing the Kruskal-Wallis test:")
+    # Perform Kruskal-Wallis test - non parametric
+    kruskal_test(medical_data)
+    print("")
 
-    # Perform Kruskal-Wallis test
-    kruskal_wallis_test(data)
+    print("Performing the Mann Whitney U test:")
+    # Perform Mann Whitney U test - non parametric
+    mann_whitney_u_test(medical_data)
 
 
 if __name__ == "__main__":
