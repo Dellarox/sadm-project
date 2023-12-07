@@ -11,27 +11,31 @@ def check_normal_distribution(data):
     plt.figure(figsize=(12, 6))
 
     plt.subplot(2, 2, 1)
-    plt.hist(height_data, bins=20, color='skyblue', edgecolor='black')
-    plt.title('Histogram')
+    plt.hist(height_data, bins=20, color="skyblue", edgecolor="black")
+    plt.xlabel("Height [inch]")
+    plt.title("Histogram - height")
 
     plt.subplot(2, 2, 2)
-    plt.hist(weight_data, bins=20, color='skyblue', edgecolor='black')
-    plt.title('Histogram')
+    plt.hist(weight_data, bins=20, color="skyblue", edgecolor="black")
+    plt.xlabel("Weight [pounds]")
+    plt.title("Histogram - weight")
 
     plt.subplot(2, 2, 3)
     plt.boxplot(height_data, vert=False)
-    plt.title('Boxplot')
+    plt.xlabel("Height [inch]")
+    plt.title("Boxplot - height")
 
     plt.subplot(2, 2, 4)
     plt.boxplot(weight_data, vert=False)
-    plt.title('Boxplot')
+    plt.xlabel("Weight [pounds]")
+    plt.title("Boxplot - weight")
 
     # Shapiro-Wilk Test for Normality
     height_statistics, height_p_value = shapiro(height_data)
     weight_statistics, weight_p_value = shapiro(weight_data)
 
-    print(f'Shapiro-Wilk p-value for height: {height_p_value:.4f}')
-    print(f'Shapiro-Wilk p-value for weight: {weight_p_value:.4f}')
+    print(f"Shapiro-Wilk p-value for height: {height_p_value:.4f}")
+    print(f"Shapiro-Wilk p-value for weight: {weight_p_value:.4f}")
 
     plt.tight_layout()
     plt.show()
@@ -66,55 +70,70 @@ def student_ttest(data):
 
     alpha = 0.05
     if p_value < alpha:
-        print('Reject the null hypothesis. There is a significant difference between height and weight levels.')
+        print(
+            "Reject the null hypothesis. There is a significant difference between height and weight levels."
+        )
     else:
         print(
-            'Fail to reject the null hypothesis. There is no significant difference between height and weight levels.')
+            "Fail to reject the null hypothesis. There is no significant difference between height and weight levels."
+        )
 
 
 def paired_ttest(data):
-    corr_coefficient, p_value = ttest_rel(data['Weight'], data['Height'])
+    corr_coefficient, p_value = ttest_rel(data["Weight"], data["Height"])
 
     # Print the results
-    print(f'Pearson correlation coefficient: {corr_coefficient}')
-    print(f'P-value: {p_value}')
+    print(f"Pearson correlation coefficient: {corr_coefficient}")
+    print(f"P-value: {p_value}")
 
     # Interpret the results
     alpha = 0.05
     if p_value < alpha:
-        print('Reject the null hypothesis. There is a significant correlation between Height and Weight.')
+        print(
+            "Reject the null hypothesis. There is a significant correlation between Height and Weight."
+        )
     else:
-        print('Fail to reject the null hypothesis. There is no significant correlation between Height and Weight.')
+        print(
+            "Fail to reject the null hypothesis. There is no significant correlation between Height and Weight."
+        )
 
 
 def kruskal_test(data):
-    kruskal_stat, p_value = kruskal(data['Age'], data['Chol'], data['ThalAch'])
+    kruskal_stat, p_value = kruskal(data["Age"], data["Chol"], data["ThalAch"])
 
     # Print the results
-    print(f'Kruskal statistics: {kruskal_stat}')
-    print(f'P-value: {p_value}')
+    print(f"Kruskal statistics: {kruskal_stat}")
+    print(f"P-value: {p_value}")
 
     # Interpret the results
     alpha = 0.05
     if p_value < alpha:
-        print('Reject the null hypothesis. There is a significant correlation between Height and Weight.')
+        print(
+            "Reject the null hypothesis. There is a significant correlation between Height and Weight."
+        )
     else:
-        print('Fail to reject the null hypothesis. There is no significant correlation between Height and Weight.')
+        print(
+            "Fail to reject the null hypothesis. There is no significant correlation between Height and Weight."
+        )
 
 
 def mann_whitney_u_test(data):
-    mann_whitney_u_stat, p_value = mannwhitneyu(data['ThalAch'], data['Sex'])
+    mann_whitney_u_stat, p_value = mannwhitneyu(data["ThalAch"], data["Sex"])
 
     # Print the results
-    print(f'Mann Whitney U statistic: {mann_whitney_u_stat}')
-    print(f'P-value: {p_value}')
+    print(f"Mann Whitney U statistic: {mann_whitney_u_stat}")
+    print(f"P-value: {p_value}")
 
     # Interpret the results
     alpha = 0.05
     if p_value < alpha:
-        print('Reject the null hypothesis. There is a significant difference between ThalAch and Sex.')
+        print(
+            "Reject the null hypothesis. There is a significant difference between ThalAch and Sex."
+        )
     else:
-        print('Fail to reject the null hypothesis. There is no significant difference between ThalAch and Sex.')
+        print(
+            "Fail to reject the null hypothesis. There is no significant difference between ThalAch and Sex."
+        )
 
 
 def main():
@@ -124,8 +143,13 @@ def main():
     medical_data = pd.read_csv("datasets/heart_disease.csv")
 
     # Calculate and save descriptive statistics
-    descriptive_statistics(normal_distributed_data, output_file="descriptive_stats/descriptive_statistics_height_weight.csv")
-    descriptive_statistics(medical_data, output_file="descriptive_stats/descriptive_statistics_medical.csv")
+    descriptive_statistics(
+        normal_distributed_data,
+        output_file="descriptive_stats/descriptive_statistics_height_weight.csv",
+    )
+    descriptive_statistics(
+        medical_data, output_file="descriptive_stats/descriptive_statistics_medical.csv"
+    )
 
     print("Performing the normal distribution check:")
     # Checking normal distribution of data for tests with normal distribution
