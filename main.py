@@ -1,6 +1,35 @@
+import os
 import pandas as pd
 from scipy.stats import shapiro, ttest_ind, ttest_rel, mannwhitneyu, kruskal
 import matplotlib.pyplot as plt
+
+
+def plots(data):
+    os.makedirs("plots", exist_ok=True)
+    columns = {
+        "Chol": "Cholesterol level [mg/dL]",
+        "Age": "Age [years]",
+        "ThalAch": "Max BPS Level [beats/min]",
+        "TRestBPs": "Rest BPS Level [beats/min]",
+    }
+
+    for index, label in enumerate(columns.keys()):
+        plt.figure(figsize=(12, 6))
+        to_plot = data[label]
+
+        plt.subplot(1, 2, 1)
+        plt.hist(to_plot, bins=20, color="skyblue", edgecolor="black")
+        plt.xlabel(f"{columns[label]}")
+        plt.title(f"Histogram - {columns[label]}")
+
+        plt.subplot(1, 2, 2)
+        plt.boxplot(to_plot, vert=False)
+        plt.xlabel(f"{columns[label]}")
+        plt.title(f"Boxplot - {columns[label]}")
+
+        plt.tight_layout()
+        plt.savefig(f"plots/{label}.png")
+        plt.show()
 
 
 def check_normal_distribution(data):
@@ -38,6 +67,7 @@ def check_normal_distribution(data):
     print(f"Shapiro-Wilk p-value for weight: {weight_p_value:.4f}")
 
     plt.tight_layout()
+    plt.savefig("plots/normal_distribution.png")
     plt.show()
 
 
@@ -90,16 +120,16 @@ def paired_ttest(data):
     alpha = 0.05
     if p_value < alpha:
         print(
-            "Reject the null hypothesis. There is a significant correlation between Height and Weight."
+            "Reject the null hypothesis. There is a significant difference between Height and Weight."
         )
     else:
         print(
-            "Fail to reject the null hypothesis. There is no significant correlation between Height and Weight."
+            "Fail to reject the null hypothesis. There is no significant difference between Height and Weight."
         )
 
 
 def kruskal_test(data):
-    kruskal_stat, p_value = kruskal(data["Age"], data["Chol"], data["ThalAch"])
+    kruskal_stat, p_value = kruskal(data["ThalAch"], data["Chol"], data["Age"])
 
     # Print the results
     print(f"Kruskal statistics: {kruskal_stat}")
@@ -109,16 +139,16 @@ def kruskal_test(data):
     alpha = 0.05
     if p_value < alpha:
         print(
-            "Reject the null hypothesis. There is a significant correlation between Height and Weight."
+            "Reject the null hypothesis. There is a significant difference between Height and Weight."
         )
     else:
         print(
-            "Fail to reject the null hypothesis. There is no significant correlation between Height and Weight."
+            "Fail to reject the null hypothesis. There is no significant difference between Height and Weight."
         )
 
 
 def mann_whitney_u_test(data):
-    mann_whitney_u_stat, p_value = mannwhitneyu(data["ThalAch"], data["Sex"])
+    mann_whitney_u_stat, p_value = mannwhitneyu(data["Age"], data["Chol"])
 
     # Print the results
     print(f"Mann Whitney U statistic: {mann_whitney_u_stat}")
@@ -141,6 +171,8 @@ def main():
     normal_distributed_data = pd.read_csv("datasets/height_weight.csv")
     # Loading non-normal distributed data - https://www.kaggle.com/datasets/yasserh/heart-disease-dataset
     medical_data = pd.read_csv("datasets/heart_disease.csv")
+
+    plots(medical_data)
 
     # Calculate and save descriptive statistics
     descriptive_statistics(
