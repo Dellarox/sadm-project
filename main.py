@@ -118,9 +118,9 @@ def mann_whitney_u_test(data):
 
 
 def main():
-    # Loading normal distributed data
+    # Loading normal distributed data - https://www.kaggle.com/code/mysha1rysh/gaussian-normal-distribution/notebook
     normal_distributed_data = pd.read_csv("datasets/height_weight.csv")
-    # Loading non-normal distributed data
+    # Loading non-normal distributed data - https://www.kaggle.com/datasets/yasserh/heart-disease-dataset
     medical_data = pd.read_csv("datasets/heart_disease.csv")
 
     # Calculate and save descriptive statistics
