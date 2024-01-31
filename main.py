@@ -4,6 +4,12 @@ import numpy as np
 import pandas as pd
 from scipy.stats import shapiro, ttest_ind, ttest_rel, mannwhitneyu, kruskal
 import matplotlib.pyplot as plt
+from sklearn.datasets import make_classification
+from sklearn.decomposition import PCA
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import roc_curve, auc, roc_auc_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 from scipy.stats import friedmanchisquare, shapiro
 import scikit_posthocs as sp
@@ -254,49 +260,132 @@ def plot_survival_curves():
     legend.get_texts()[0].set_text('Wiek')
     plt.show()
 
-def main():
-    # # Loading normal distributed data - https://www.kaggle.com/code/mysha1rysh/gaussian-normal-distribution/notebook
-    # normal_distributed_data = pd.read_csv("datasets/height_weight.csv")
-    # # Loading non-normal distributed data - https://www.kaggle.com/datasets/yasserh/heart-disease-dataset
-    # medical_data = pd.read_csv("datasets/heart_disease.csv")
-    #
-    # plots(medical_data)
-    #
-    # # Calculate and save descriptive statistics
-    # descriptive_statistics(
-    #     normal_distributed_data,
-    #     output_file="descriptive_stats/descriptive_statistics_height_weight.csv",
-    # )
-    # descriptive_statistics(
-    #     medical_data, output_file="descriptive_stats/descriptive_statistics_medical.csv"
-    # )
-    #
-    # print("Performing the normal distribution check:")
-    # # Checking normal distribution of data for tests with normal distribution
-    # check_normal_distribution(normal_distributed_data)
-    # print("")
-    #
-    # print("Performing the student t-test:")
-    # # Perform Student t-test - parametric
-    # student_ttest(normal_distributed_data)
-    # print("")
-    #
-    # print("Performing the pair t-test:")
-    # # Perform paired t-test correlation test - parametric
-    # paired_ttest(normal_distributed_data)
-    # print("")
-    #
-    # print("Performing the Kruskal-Wallis test:")
-    # # Perform Kruskal-Wallis test - non parametric
-    # kruskal_test(medical_data)
-    # print("")
-    #
-    # print("Performing the Mann Whitney U test:")
-    # # Perform Mann Whitney U test - non parametric
-    # mann_whitney_u_test(medical_data)
+def pca_roc():
+    data = pd.read_csv("datasets/strokes.csv")
 
-    # make_friedman_test()
+
+
+    # Extract relevant columns for X
+    selected_features = ["gender","age","hypertension","heart_disease","ever_married","work_type","Residence_type","avg_glucose_level","bmi","smoking_status"]
+
+    # Convert categorical variables to numerical or boolean values
+    gender_mapping = {'Male': 0, 'Female': 1}
+    smoking_status_mapping = {'never smoked': 0, 'formerly smoked': 1, 'smokes': 2}
+    ever_married_mapping = {'No': 0, 'Yes': 1}
+    work_type_mapping = {'Private': 0, 'Self-employed': 1, 'Govt_job': 2, 'children': 3, 'Never_worked': 4}
+    residence_type_mapping = {'Urban': 0, 'Rural': 1}
+    data['gender'] = data['gender'].map(gender_mapping)
+    data['smoking_status'] = data['smoking_status'].map(smoking_status_mapping)
+    data['ever_married'] = data['ever_married'].map(ever_married_mapping)
+    data['work_type'] = data['work_type'].map(work_type_mapping)
+    data['Residence_type'] = data['Residence_type'].map(residence_type_mapping)
+    data['bmi'] = pd.to_numeric(data['bmi'], errors='coerce')
+
+    data = data.dropna(axis="rows")
+    X = data[selected_features].dropna(axis="rows", how='all').values
+    y = data["stroke"].values
+
+    scaler = StandardScaler()
+    X_standardized = scaler.fit_transform(X)
+    n_components = min(len(selected_features), len(data))
+    pca = PCA(n_components=n_components)
+    X_pca = pca.fit_transform(X_standardized)
+    explained_variance_ratio = pca.explained_variance_ratio_
+    plt.plot(range(1, n_components + 1), explained_variance_ratio.cumsum(), marker='o')
+    plt.title('Explained Variance Ratio vs. Number of Principal Components')
+    plt.xlabel('Ilość cech')
+    plt.ylabel('Cumulative Explained Variance Ratio')
+    plt.show()
+
+    results = []
+    auc_res = []
+
+    for i in range(1,11):
+        X_train, X_test, y_train, y_test = train_test_split(X_pca[:,:i], y, test_size=0.2)
+        clf = RandomForestClassifier(random_state=42)
+        clf.fit(X_train, y_train)
+        y_scores = clf.predict_proba(X_test)[:, 1]
+
+        fpr, tpr, thresholds = roc_curve(y_test, y_scores)
+        auc_res.append( roc_auc_score(y_test, y_scores))
+        results.append((fpr, tpr))
+
+
+    plt.figure(figsize=(8, 6))
+
+    for i,res in enumerate(results):
+        fpr, tpr=res
+        plt.plot(fpr, tpr, lw=2,label=f"Attributes = {i+1}")
+
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Krzywa ROC')
+    plt.legend(loc='lower right')
+
+    plt.savefig("plots/roc.png")
+
+    eigenvalues = pca.explained_variance_
+    eigenvalue_diff = np.diff(np.insert(eigenvalues, 10, 0))
+    explained_variance_ratio = pca.explained_variance_ratio_
+    cumulative_variance_ratio = np.cumsum(explained_variance_ratio)
+    table_data = {
+        "Eigenvalue": eigenvalues,
+        "Difference": eigenvalue_diff,
+        "Proportion": explained_variance_ratio,
+        "Cumulative": cumulative_variance_ratio,
+        "AUC": auc_res
+    }
+    result_table = pd.DataFrame(table_data)
+    result_table.index += 1
+    result_table.to_csv('pca_results_table.csv', index_label='Index')
+
+def main():
+    # Loading normal distributed data - https://www.kaggle.com/code/mysha1rysh/gaussian-normal-distribution/notebook
+    normal_distributed_data = pd.read_csv("datasets/height_weight.csv")
+    # Loading non-normal distributed data - https://www.kaggle.com/datasets/yasserh/heart-disease-dataset
+    medical_data = pd.read_csv("datasets/heart_disease.csv")
+
+    plots(medical_data)
+
+    # Calculate and save descriptive statistics
+    descriptive_statistics(
+        normal_distributed_data,
+        output_file="descriptive_stats/descriptive_statistics_height_weight.csv",
+    )
+    descriptive_statistics(
+        medical_data, output_file="descriptive_stats/descriptive_statistics_medical.csv"
+    )
+
+    print("Performing the normal distribution check:")
+    # Checking normal distribution of data for tests with normal distribution
+    check_normal_distribution(normal_distributed_data)
+    print("")
+
+    print("Performing the student t-test:")
+    # Perform Student t-test - parametric
+    student_ttest(normal_distributed_data)
+    print("")
+
+    print("Performing the pair t-test:")
+    # Perform paired t-test correlation test - parametric
+    paired_ttest(normal_distributed_data)
+    print("")
+
+    print("Performing the Kruskal-Wallis test:")
+    # Perform Kruskal-Wallis test - non parametric
+    kruskal_test(medical_data)
+    print("")
+
+    print("Performing the Mann Whitney U test:")
+    # Perform Mann Whitney U test - non parametric
+    mann_whitney_u_test(medical_data)
+
+    make_friedman_test()
+
     plot_survival_curves()
+
+    pca_roc()
 
 
 if __name__ == "__main__":
