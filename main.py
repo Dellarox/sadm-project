@@ -227,38 +227,28 @@ def make_friedman_test():
 
 
 def plot_survival_curves():
-    # Create a DataFrame from the data
     df = pd.read_csv("datasets/strokes.csv")
 
-    # Tworzenie krzywej Kaplana-Meiera
-    kmf = KaplanMeierFitter()
+    age =60
 
-    kmf.fit(durations=df['avg_glucose_level'], event_observed=df['stroke'])
-    kmf.plot_survival_function()
+    df_over_50 = df[df['age'] > age]
+    df_under_50 = df[df['age'] <= age]
+    kmf1 = KaplanMeierFitter()
+    kmf1.fit(durations=df_over_50['avg_glucose_level'], event_observed=df_over_50['stroke'])
+    kmf2 = KaplanMeierFitter()
+    kmf2.fit(durations=df_under_50['avg_glucose_level'], event_observed=df_under_50['stroke'])
+    kmf1.plot_survival_function()
+    kmf2.plot_survival_function()
 
     plt.title('Krzywa przeżycia Kaplana-Meiera w zależności od ilości glukozy we krwi')
     plt.xlabel('Ilość glukozy we krwi')
     plt.ylabel('Prawdopodobieństwo niedostania udaru')
     plt.xlim(min(df['avg_glucose_level']) - 10, max(df['avg_glucose_level']) + 10)
     legend = plt.legend()
-    legend.get_texts()[0].set_text('Ilość glukozy we krwi')
+    legend.get_texts()[0].set_text(f'Ilość glukozy we krwi dla grupy > {age} lat')
+    legend.get_texts()[1].set_text(f'Ilość glukozy we krwi dla grupy <= {age} lat')
     plt.show()
 
-    kmf = KaplanMeierFitter()
-
-    df['age_higher_then_40_event'] = df['age'].apply(lambda x: 1 if x > 40 else 0)
-    df['age_lower_of_equal_40_event'] = df['age'].apply(lambda x: 1 if x <= 40 else 0)
-
-    kmf.fit(durations=df['age'], event_observed=df['stroke'])
-    kmf.plot_survival_function()
-
-    plt.title('Krzywa przeżycia Kaplana-Meiera w zależności od wieku')
-    plt.xlabel('Wiek')
-    plt.ylabel('Prawdopodobieństwo niedostania udaru')
-    plt.xlim(min(df['age']), max(df['age']) + 5)
-    legend = plt.legend()
-    legend.get_texts()[0].set_text('Wiek')
-    plt.show()
 
 def pca_roc():
     data = pd.read_csv("datasets/strokes.csv")
@@ -341,51 +331,51 @@ def pca_roc():
     result_table.to_csv('pca_results_table.csv', index_label='Index')
 
 def main():
-    # Loading normal distributed data - https://www.kaggle.com/code/mysha1rysh/gaussian-normal-distribution/notebook
-    normal_distributed_data = pd.read_csv("datasets/height_weight.csv")
-    # Loading non-normal distributed data - https://www.kaggle.com/datasets/yasserh/heart-disease-dataset
-    medical_data = pd.read_csv("datasets/heart_disease.csv")
-
-    plots(medical_data)
-
-    # Calculate and save descriptive statistics
-    descriptive_statistics(
-        normal_distributed_data,
-        output_file="descriptive_stats/descriptive_statistics_height_weight.csv",
-    )
-    descriptive_statistics(
-        medical_data, output_file="descriptive_stats/descriptive_statistics_medical.csv"
-    )
-
-    print("Performing the normal distribution check:")
-    # Checking normal distribution of data for tests with normal distribution
-    check_normal_distribution(normal_distributed_data)
-    print("")
-
-    print("Performing the student t-test:")
-    # Perform Student t-test - parametric
-    student_ttest(normal_distributed_data)
-    print("")
-
-    print("Performing the pair t-test:")
-    # Perform paired t-test correlation test - parametric
-    paired_ttest(normal_distributed_data)
-    print("")
-
-    print("Performing the Kruskal-Wallis test:")
-    # Perform Kruskal-Wallis test - non parametric
-    kruskal_test(medical_data)
-    print("")
-
-    print("Performing the Mann Whitney U test:")
-    # Perform Mann Whitney U test - non parametric
-    mann_whitney_u_test(medical_data)
-
-    make_friedman_test()
+    # # Loading normal distributed data - https://www.kaggle.com/code/mysha1rysh/gaussian-normal-distribution/notebook
+    # normal_distributed_data = pd.read_csv("datasets/height_weight.csv")
+    # # Loading non-normal distributed data - https://www.kaggle.com/datasets/yasserh/heart-disease-dataset
+    # medical_data = pd.read_csv("datasets/heart_disease.csv")
+    #
+    # plots(medical_data)
+    #
+    # # Calculate and save descriptive statistics
+    # descriptive_statistics(
+    #     normal_distributed_data,
+    #     output_file="descriptive_stats/descriptive_statistics_height_weight.csv",
+    # )
+    # descriptive_statistics(
+    #     medical_data, output_file="descriptive_stats/descriptive_statistics_medical.csv"
+    # )
+    #
+    # print("Performing the normal distribution check:")
+    # # Checking normal distribution of data for tests with normal distribution
+    # check_normal_distribution(normal_distributed_data)
+    # print("")
+    #
+    # print("Performing the student t-test:")
+    # # Perform Student t-test - parametric
+    # student_ttest(normal_distributed_data)
+    # print("")
+    #
+    # print("Performing the pair t-test:")
+    # # Perform paired t-test correlation test - parametric
+    # paired_ttest(normal_distributed_data)
+    # print("")
+    #
+    # print("Performing the Kruskal-Wallis test:")
+    # # Perform Kruskal-Wallis test - non parametric
+    # kruskal_test(medical_data)
+    # print("")
+    #
+    # print("Performing the Mann Whitney U test:")
+    # # Perform Mann Whitney U test - non parametric
+    # mann_whitney_u_test(medical_data)
+    #
+    # make_friedman_test()
 
     plot_survival_curves()
 
-    pca_roc()
+    # pca_roc()
 
 
 if __name__ == "__main__":
