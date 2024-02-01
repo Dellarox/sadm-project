@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pandas as pd
-from scipy.stats import shapiro, ttest_ind, ttest_rel, mannwhitneyu, kruskal
+from scipy.stats import shapiro, ttest_ind, ttest_rel, mannwhitneyu, kruskal, binom
 import matplotlib.pyplot as plt
 from sklearn.datasets import make_classification
 from sklearn.decomposition import PCA
@@ -42,10 +42,12 @@ def plots(data):
 
         plt.tight_layout()
         plt.savefig(f"plots/{label}.png")
-        plt.show()
+        plt.close()
 
 
-def check_normal_distribution(data):
+def check_normal_distribution():
+    print("Performing the normal distribution check:")
+    data = pd.read_csv("datasets/height_weight.csv")
     height_data = data["Height"]
     weight_data = data["Weight"]
 
@@ -81,7 +83,8 @@ def check_normal_distribution(data):
 
     plt.tight_layout()
     plt.savefig("plots/normal_distribution.png")
-    plt.show()
+    plt.close()
+    print("")
 
 
 # This function calculates basic descriptive statistics for the given data and saves the results to a file.
@@ -103,27 +106,46 @@ def descriptive_statistics(data, output_file="descriptive_statistics.csv"):
     print(descriptive_stats)
 
 
-def student_ttest(data):
-    height = data["Height"]
-    weight = data["Weight"]
+def student_ttest():
+    print("Performing the student t-test:")
+    data = pd.read_csv("datasets/height_weight_exploit.csv")
 
-    t_stat, p_value = ttest_ind(height, weight)
+    df_man = data[data['Gender'] == 1]
+    df_women = data[data['Gender'] == 0]
+
+    height_man = df_man["Height"]
+    height_women = df_women["Height"]
+
+    t_stat, p_value = ttest_ind(height_man, height_women)
     print("t-statistic: ", t_stat)
     print("p-value: ", p_value)
 
     alpha = 0.05
     if p_value < alpha:
         print(
-            "Reject the null hypothesis. There is a significant difference between height and weight levels."
+            "Reject the null hypothesis. There is a significant difference in height between men and women."
         )
     else:
         print(
-            "Fail to reject the null hypothesis. There is no significant difference between height and weight levels."
+            "Fail to reject the null hypothesis. There is no significant difference in height between men and women."
         )
 
+    print("")
 
-def paired_ttest(data):
-    corr_coefficient, p_value = ttest_rel(data["Weight"], data["Height"])
+
+def paired_ttest():
+    print("Performing the pair t-test:")
+    data = pd.read_csv("datasets/height_weight_exploit.csv")
+
+    df_man = data[data['Gender'] == 1]
+    df_women = data[data['Gender'] == 0]
+
+    weight_man = df_man["Weight"].values
+    weight_women = df_women["Weight"].values
+
+    max_pairs = max(len(weight_man),len(weight_man))
+
+    corr_coefficient, p_value = ttest_rel(weight_man[:max_pairs], weight_women[:max_pairs])
 
     # Print the results
     print(f"Pearson correlation coefficient: {corr_coefficient}")
@@ -133,16 +155,24 @@ def paired_ttest(data):
     alpha = 0.05
     if p_value < alpha:
         print(
-            "Reject the null hypothesis. There is a significant difference between Height and Weight."
+            "Reject the null hypothesis. There is a significant difference in weight before and after tratment."
         )
     else:
         print(
-            "Fail to reject the null hypothesis. There is no significant difference between Height and Weight."
+            "Fail to reject the null hypothesis. There is no significant difference in weight before and after tratment."
         )
 
+    print("")
 
-def kruskal_test(data):
-    kruskal_stat, p_value = kruskal(data["ThalAch"], data["Chol"], data["Age"])
+
+def kruskal_test():
+    print("Performing the Kruskal-Wallis test:")
+    data = pd.read_csv("datasets/heart_disease.csv")
+
+    df_man = data[data['Sex'] == 1]
+    df_women = data[data['Sex'] == 0]
+
+    kruskal_stat, p_value = kruskal(df_man["Chol"], df_women["Chol"])
 
     # Print the results
     print(f"Kruskal statistics: {kruskal_stat}")
@@ -152,16 +182,24 @@ def kruskal_test(data):
     alpha = 0.05
     if p_value < alpha:
         print(
-            "Reject the null hypothesis. There is a significant difference between Height and Weight."
+            "Reject the null hypothesis. There is a significant difference in cholesterol level between men and women."
         )
     else:
         print(
-            "Fail to reject the null hypothesis. There is no significant difference between Height and Weight."
+            "Fail to reject the null hypothesis. There is no significant difference in cholesterol level between men and women."
         )
 
+    print("")
 
-def mann_whitney_u_test(data):
-    mann_whitney_u_stat, p_value = mannwhitneyu(data["Age"], data["Chol"])
+
+def mann_whitney_u_test():
+    print("Performing the Mann Whitney U test:")
+    data = pd.read_csv("datasets/heart_disease.csv")
+
+    df_man = data[data['Sex'] == 1]
+    df_women = data[data['Sex'] == 0]
+
+    mann_whitney_u_stat, p_value = mannwhitneyu(df_man["RestECG"], df_women["RestECG"])
 
     # Print the results
     print(f"Mann Whitney U statistic: {mann_whitney_u_stat}")
@@ -171,11 +209,11 @@ def mann_whitney_u_test(data):
     alpha = 0.05
     if p_value < alpha:
         print(
-            "Reject the null hypothesis. There is a significant difference between ThalAch and Sex."
+            "Reject the null hypothesis. There is a significant difference in rest ecg between men and women."
         )
     else:
         print(
-            "Fail to reject the null hypothesis. There is no significant difference between ThalAch and Sex."
+            "Fail to reject the null hypothesis. There is no significant difference in rest ecg between men and women."
         )
 
 
@@ -229,34 +267,55 @@ def make_friedman_test():
 def plot_survival_curves():
     df = pd.read_csv("datasets/strokes.csv")
 
-    age =60
+    glucose_level = 150
 
-    df_over_50 = df[df['age'] > age]
-    df_under_50 = df[df['age'] <= age]
+    df_over_100 = df[df['avg_glucose_level'] > glucose_level]
+    df_under_100 = df[df['avg_glucose_level'] <= glucose_level]
     kmf1 = KaplanMeierFitter()
-    kmf1.fit(durations=df_over_50['avg_glucose_level'], event_observed=df_over_50['stroke'])
+    kmf1.fit(durations=df_over_100['age'], event_observed=df_over_100['stroke'])
     kmf2 = KaplanMeierFitter()
-    kmf2.fit(durations=df_under_50['avg_glucose_level'], event_observed=df_under_50['stroke'])
+    kmf2.fit(durations=df_under_100['age'], event_observed=df_under_100['stroke'])
     kmf1.plot_survival_function()
     kmf2.plot_survival_function()
 
-    plt.title('Krzywa przeżycia Kaplana-Meiera w zależności od ilości glukozy we krwi')
-    plt.xlabel('Ilość glukozy we krwi')
+    plt.title('Krzywa przeżycia Kaplana-Meiera w zależności od poziomu glukozy')
+    plt.xlabel('Wiek')
     plt.ylabel('Prawdopodobieństwo niedostania udaru')
-    plt.xlim(min(df['avg_glucose_level']) - 10, max(df['avg_glucose_level']) + 10)
+    plt.xlim(45, 85)
     legend = plt.legend()
-    legend.get_texts()[0].set_text(f'Ilość glukozy we krwi dla grupy > {age} lat')
-    legend.get_texts()[1].set_text(f'Ilość glukozy we krwi dla grupy <= {age} lat')
-    plt.show()
+    legend.get_texts()[0].set_text(f'Wiek dla grupy > {glucose_level} poziomu glukozy')
+    legend.get_texts()[1].set_text(f'Wiek dla grupy <= {glucose_level} poziomu glukozy')
+    plt.savefig("plots/curve_1.png")
+    plt.close()
+
+    bmi = 25
+
+    df_over_25 = df[df['bmi'] > bmi]
+    df_under_25 = df[df['bmi'] <= bmi]
+    kmf1 = KaplanMeierFitter()
+    kmf1.fit(durations=df_over_25['age'], event_observed=df_over_25['stroke'])
+    kmf2 = KaplanMeierFitter()
+    kmf2.fit(durations=df_under_25['age'], event_observed=df_under_25['stroke'])
+    kmf1.plot_survival_function()
+    kmf2.plot_survival_function()
+
+    plt.title('Krzywa przeżycia Kaplana-Meiera w zależności od wskaźnika BMI')
+    plt.xlabel('Wiek')
+    plt.ylabel('Prawdopodobieństwo niedostania udaru')
+    plt.xlim(45, 85)
+    legend = plt.legend()
+    legend.get_texts()[0].set_text(f'Wiek dla grupy > {bmi} wskaźnika bmi')
+    legend.get_texts()[1].set_text(f'Wiek dla grupy <= {bmi} wskaźnika bmi')
+    plt.savefig("plots/curve_2.png")
+    plt.close()
 
 
 def pca_roc():
     data = pd.read_csv("datasets/strokes.csv")
 
-
-
     # Extract relevant columns for X
-    selected_features = ["gender","age","hypertension","heart_disease","ever_married","work_type","Residence_type","avg_glucose_level","bmi","smoking_status"]
+    selected_features = ["gender", "age", "hypertension", "heart_disease", "ever_married", "work_type",
+                         "Residence_type", "avg_glucose_level", "bmi", "smoking_status"]
 
     # Convert categorical variables to numerical or boolean values
     gender_mapping = {'Male': 0, 'Female': 1}
@@ -285,27 +344,27 @@ def pca_roc():
     plt.title('Explained Variance Ratio vs. Number of Principal Components')
     plt.xlabel('Ilość cech')
     plt.ylabel('Cumulative Explained Variance Ratio')
-    plt.show()
+
+    plt.close()
 
     results = []
     auc_res = []
 
-    for i in range(1,11):
-        X_train, X_test, y_train, y_test = train_test_split(X_pca[:,:i], y, test_size=0.2)
+    for i in range(1, 11):
+        X_train, X_test, y_train, y_test = train_test_split(X_pca[:, :i], y, test_size=0.2)
         clf = RandomForestClassifier(random_state=42)
         clf.fit(X_train, y_train)
         y_scores = clf.predict_proba(X_test)[:, 1]
 
         fpr, tpr, thresholds = roc_curve(y_test, y_scores)
-        auc_res.append( roc_auc_score(y_test, y_scores))
+        auc_res.append(roc_auc_score(y_test, y_scores))
         results.append((fpr, tpr))
-
 
     plt.figure(figsize=(8, 6))
 
-    for i,res in enumerate(results):
-        fpr, tpr=res
-        plt.plot(fpr, tpr, lw=2,label=f"Attributes = {i+1}")
+    for i, res in enumerate(results):
+        fpr, tpr = res
+        plt.plot(fpr, tpr, lw=2, label=f"Attributes = {i + 1}")
 
     plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
     plt.xlabel('False Positive Rate')
@@ -320,15 +379,16 @@ def pca_roc():
     explained_variance_ratio = pca.explained_variance_ratio_
     cumulative_variance_ratio = np.cumsum(explained_variance_ratio)
     table_data = {
-        "Eigenvalue": eigenvalues,
-        "Difference": eigenvalue_diff,
-        "Proportion": explained_variance_ratio,
-        "Cumulative": cumulative_variance_ratio,
-        "AUC": auc_res
+        "Eigenvalue": np.round(eigenvalues,4),
+        "Difference": np.round(eigenvalue_diff,4),
+        "Proportion": np.round(explained_variance_ratio,4),
+        "Cumulative": np.round(cumulative_variance_ratio,4),
+        "AUC": np.round(auc_res,4)
     }
     result_table = pd.DataFrame(table_data)
     result_table.index += 1
     result_table.to_csv('pca_results_table.csv', index_label='Index')
+
 
 def main():
     # # Loading normal distributed data - https://www.kaggle.com/code/mysha1rysh/gaussian-normal-distribution/notebook
@@ -338,44 +398,67 @@ def main():
     #
     # plots(medical_data)
     #
-    # # Calculate and save descriptive statistics
-    # descriptive_statistics(
-    #     normal_distributed_data,
-    #     output_file="descriptive_stats/descriptive_statistics_height_weight.csv",
-    # )
-    # descriptive_statistics(
-    #     medical_data, output_file="descriptive_stats/descriptive_statistics_medical.csv"
-    # )
+    # # # Calculate and save descriptive statistics
+    # # descriptive_statistics(
+    # #     normal_distributed_data,
+    # #     output_file="descriptive_stats/descriptive_statistics_height_weight.csv",
+    # # )
+    # # descriptive_statistics(
+    # #     medical_data, output_file="descriptive_stats/descriptive_statistics_medical.csv"
+    # # )
+    # #
+    # # # Checking normal distribution of data for tests with normal distribution
+    # # check_normal_distribution()
     #
-    # print("Performing the normal distribution check:")
-    # # Checking normal distribution of data for tests with normal distribution
-    # check_normal_distribution(normal_distributed_data)
-    # print("")
-    #
-    # print("Performing the student t-test:")
     # # Perform Student t-test - parametric
-    # student_ttest(normal_distributed_data)
-    # print("")
+    # student_ttest()
     #
-    # print("Performing the pair t-test:")
     # # Perform paired t-test correlation test - parametric
-    # paired_ttest(normal_distributed_data)
-    # print("")
+    # paired_ttest()
     #
-    # print("Performing the Kruskal-Wallis test:")
     # # Perform Kruskal-Wallis test - non parametric
-    # kruskal_test(medical_data)
-    # print("")
+    # kruskal_test()
     #
-    # print("Performing the Mann Whitney U test:")
     # # Perform Mann Whitney U test - non parametric
-    # mann_whitney_u_test(medical_data)
+    # mann_whitney_u_test()
     #
+    # # Perform Friedman test
     # make_friedman_test()
 
-    plot_survival_curves()
+    # # Perform survival curves
+    # plot_survival_curves()
 
-    # pca_roc()
+    # Perform ROC curves with PCA
+    pca_roc()
+
+
+# def exploit():
+#     df = pd.read_csv('datasets/height_weight.csv')
+#     output_path = 'datasets/height_weight_exploit.csv'
+#
+#     gender = []
+#
+#     opis = [0,0]
+#
+#     for i,height in enumerate(df["Weight"]):
+#         rand = np.random.randint(0,10)
+#         if height > 130:
+#             if rand < 9:
+#                 gender.append(1)
+#                 opis[1]+=1
+#             else:
+#                 gender.append(0)
+#                 opis[0]+=1
+#         else:
+#             if rand < 9:
+#                 gender.append(0)
+#                 opis[0]+=1
+#             else:
+#                 gender.append(1)
+#                 opis[1]+=1
+#
+#     df["Gender"] = gender
+#     df.to_csv(output_path, index_label='Index')
 
 
 if __name__ == "__main__":
